@@ -24,7 +24,7 @@
 <script>
   const params = new URLSearchParams(location.search);
   const rawId = params.get("order_id") || "";
-  const orderId = /^ebk_(l1|l2|l3)_\d{10,15}_[a-f0-9]{8}$/.test(rawId) ? rawId : null;
+  const orderId = /^order_[A-Za-z0-9]{8,32}$/.test(rawId) ? rawId : null;
   const title = document.getElementById("title");
   const card = document.getElementById("card");
 
@@ -38,7 +38,9 @@
       return show("No order found", '<p>This page needs an order ID. <a href="/#buy">Go back to the guide</a>.</p>');
     }
     try {
-      const res = await fetch("/api/verify-order?order_id=" + encodeURIComponent(orderId));
+      const res = await fetch("/api/verify-order?order_id=" + encodeURIComponent(orderId) +
+        (params.get("payment_id") ? "&payment_id=" + encodeURIComponent(params.get("payment_id")) : "") +
+        (params.get("signature") ? "&signature=" + encodeURIComponent(params.get("signature")) : ""));
       const data = await res.json();
 
       if (data.paid) {
@@ -53,14 +55,15 @@
         );
       }
 
-      if (data.status === "ACTIVE" && attempt < 6) {
+      const pending = data.status === "CREATED" || data.status === "ATTEMPTED";
+      if (pending && attempt < 6) {
         document.getElementById("msg") && (document.getElementById("msg").textContent = "Waiting for your bank to confirm…");
         return setTimeout(() => check(attempt + 1), 3000);
       }
 
-      if (data.status === "ACTIVE") {
+      if (pending) {
         return show("Payment not confirmed yet",
-          '<p>Your bank hasn\'t confirmed the payment. If money left your account, refresh this page in a few minutes.</p>' +
+          '<p>Razorpay hasn\'t confirmed the payment yet. If money left your account, refresh this page in a few minutes.</p>' +
           '<p>Still stuck? <a href="/contact.html">Contact us</a> with order ID <span class="order-id">' + orderId + '</span>.</p>');
       }
 

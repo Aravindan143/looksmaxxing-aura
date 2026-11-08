@@ -2,6 +2,12 @@
   publish = "public"
   functions = "netlify/functions"
 
+# Plain settings, not secrets. Numbers like the prices appear in the site's code on purpose,
+# which would otherwise trip Netlify's secrets scanner. RAZORPAY_KEY_SECRET is deliberately
+# NOT listed, so it stays protected. CASHFREE_ENV is listed only so old leftovers don't fail the build.
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "DOWNLOAD_DAYS,PRICE_L1,PRICE_L2,PRICE_L3,CASHFREE_ENV"
+
 [functions]
   node_bundler = "esbuild"
 

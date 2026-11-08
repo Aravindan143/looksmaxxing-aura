@@ -15,7 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="stylesheet" href="/styles.css">
-  <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body>
 
@@ -145,7 +145,7 @@
       </details>
       <details>
         <summary>Which payment methods work?</summary>
-        <p>UPI, debit and credit cards, net banking and wallets, all through Cashfree's secure checkout.</p>
+        <p>UPI, debit and credit cards, net banking and wallets, all through Razorpay's secure checkout.</p>
       </details>
       <details>
         <summary>Do I need a gym or expensive products?</summary>
@@ -199,7 +199,7 @@
       <a href="/contact.html">Contact</a>
     </nav>
     <!-- EDIT: your name or business name -->
-    <p>© 2026 [YOUR NAME]. AuraMax. Payments processed securely by Cashfree.</p>
+    <p>© 2026 [YOUR NAME]. AuraMax. Payments processed securely by Razorpay.</p>
   </div>
 </footer>
 
@@ -294,8 +294,35 @@
       const order = await res.json();
       if (!res.ok) throw new Error(order.error || "Could not start the payment.");
 
-      const cashfree = Cashfree({ mode: order.mode });
-      cashfree.checkout({ paymentSessionId: order.payment_session_id, redirectTarget: "_self" });
+      const rzp = new Razorpay({
+        key: order.key_id,
+        amount: order.amount,
+        currency: order.currency,
+        order_id: order.order_id,
+        name: "AuraMax",
+        description: order.description,
+        prefill: { name: data.name, email: data.email, contact: data.phone },
+        theme: { color: "#A81BE0" },
+        // After paying, send the buyer to the download page with proof of payment.
+        handler: function (r) {
+          location.href =
+            "/success.html?order_id=" + encodeURIComponent(r.razorpay_order_id) +
+            "&payment_id=" + encodeURIComponent(r.razorpay_payment_id) +
+            "&signature=" + encodeURIComponent(r.razorpay_signature);
+        },
+        modal: {
+          ondismiss: function () {
+            payBtn.disabled = false;
+            refreshPrices();
+          },
+        },
+      });
+      rzp.on("payment.failed", function (resp) {
+        errorEl.textContent = (resp.error && resp.error.description) || "The payment failed. Please try again.";
+        payBtn.disabled = false;
+        refreshPrices();
+      });
+      rzp.open();
     } catch (err) {
       errorEl.textContent = err.message || "Could not start the payment. Try again in a minute.";
       payBtn.disabled = false;

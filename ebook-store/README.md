@@ -1,86 +1,55 @@
-# Sell your PDF with Cashfree — free hosting on Netlify
+# AuraMax: sell your PDF guides with Razorpay on free Netlify hosting
 
-Total running cost: ₹0 for hosting. You only pay Cashfree's per-transaction gateway fee (no platform commission).
+Hosting costs ₹0. You only pay Razorpay's per-payment fee.
 
 ## How it works
-
-1. Buyer fills name, email, phone on your site and clicks **Pay**.
-2. A Netlify function (`/api/create-order`) creates the order with Cashfree using your secret key. The price is set on the server, so nobody can edit it in the browser.
-3. Cashfree's checkout opens (UPI, cards, net banking, wallets).
-4. After paying, Cashfree sends the buyer to `success.html`, which asks `/api/verify-order` whether the order is PAID.
-5. The **Download** button goes to `/api/download`, which checks with Cashfree again and only then redirects to your PDF.
+1. The buyer picks a level, fills name, email and phone, and clicks **Pay**.
+2. `/api/create-order` creates the order with Razorpay using your secret key. The price comes from the server, so it can't be edited in the browser.
+3. Razorpay's checkout opens (UPI, cards, net banking, wallets).
+4. After paying, the buyer lands on `success.html`. `/api/verify-order` checks the payment signature and asks Razorpay's server whether the order is paid.
+5. The Download button goes to `/api/download`, which checks with Razorpay again and only then redirects to that level's PDF.
 
 ## Files
-
 ```
 netlify.toml                    Netlify settings
-public/index.html               Sales page + checkout form   ← edit the text here
-public/success.html             Post-payment download page
-public/terms.html, privacy.html, refund.html, delivery.html, contact.html
-                                Policy pages Cashfree checks before approving you
-public/styles.css               Design
-netlify/functions/*.mjs         Server code (create order, verify, download)
-netlify/lib/cashfree.mjs        Shared Cashfree helpers
+public/index.html               Sales page + checkout     <- edit the text here
+public/success.html             Download page shown after payment
+public/terms, privacy, refund, delivery, contact .html   <- replace every [PLACEHOLDER]
+public/styles.css               Design and motion
+netlify/lib/razorpay.mjs        Levels, prices and Razorpay helpers
+netlify/functions/*.mjs         Server code (products, create-order, verify-order, download)
 ```
 
-## Step 1 — Make 3 PDFs and put them on Google Drive
-| Level | What the PDF contains |
-|---|---|
-| Level 1: Starter Pack | Skin, Hair and grooming, Posture and jawline, 30-day checklist |
-| Level 2: Complete plan | Everything in Level 1 + Physique, Style, Presence, day-by-day 90-day schedule |
-| Level 3: Ultimate pack | Everything in Level 2 + progress tracker, cheat sheets, photo check-in guide |
-
-For each PDF: upload to Google Drive → Share → General access → **Anyone with the link** → Viewer → copy the link.
-For a direct download instead of a preview, change `https://drive.google.com/file/d/FILE_ID/view?usp=sharing`
-to `https://drive.google.com/uc?export=download&id=FILE_ID`.
-Keep these links private. They are only shown to people who paid.
-Only keep bullets on the website that match what is really inside each PDF.
-
-## Step 2 — Edit your content
-- `public/index.html`: title, headline, what each level contains, FAQ. Prices come from the server (see `netlify/lib/cashfree.mjs`), so the page and the amount charged can't disagree .
-- All policy pages: replace `[YOUR NAME]`, `[YOUR EMAIL]`, `[YOUR PHONE]`, `[CITY]`, address, `[DATE]`.
-
-## Step 3 — Put the code on GitHub (free)
-1. Create an account at github.com → **New repository** (Private is fine).
-2. **Upload files** → drag in everything from this folder (keep the folder structure) → Commit.
-
-## Step 4 — Deploy on Netlify (free)
-1. Sign up at netlify.com with your GitHub account.
-2. **Add new site → Import an existing project → GitHub** → pick the repo.
-3. Leave build settings as they are (netlify.toml handles it) → **Deploy**.
-4. You get a free address like `your-name.netlify.app` (rename it under Site configuration → Change site name).
-
-## Step 5 — Get Cashfree test keys
-1. Sign up at cashfree.com as a merchant.
-2. Switch to **Test / Sandbox** mode → Developers → API Keys → copy **App ID** and **Secret Key**.
-
-## Step 6 — Add environment variables in Netlify
-Site configuration → Environment variables → Add:
+## Netlify environment variables
+Site configuration -> Environment variables:
 
 | Key | Value |
 |---|---|
-| `CASHFREE_APP_ID` | your App ID |
-| `CASHFREE_SECRET_KEY` | your Secret Key |
-| `CASHFREE_ENV` | `sandbox` (later `production`) |
+| `RAZORPAY_KEY_ID` | `rzp_test_...` while testing, `rzp_live_...` when live |
+| `RAZORPAY_KEY_SECRET` | the matching secret. Type it into Netlify only, never into a file or chat |
 | `DOWNLOAD_URL_L1` | Google Drive link to the Level 1 PDF |
 | `DOWNLOAD_URL_L2` | Google Drive link to the Level 2 PDF |
 | `DOWNLOAD_URL_L3` | Google Drive link to the Level 3 PDF |
-| `DOWNLOAD_DAYS` | `30` (optional) |
-| `PRICE_L1`, `PRICE_L2`, `PRICE_L3` | optional price changes; defaults are 99, 249, 499 |
+| `DOWNLOAD_DAYS` | optional, default 30 |
+| `PRICE_L1`, `PRICE_L2`, `PRICE_L3` | optional, defaults 99, 249, 499 |
 
-Then **Deploys → Trigger deploy** so the new values take effect.
+The key itself decides test or live mode: `rzp_test_` keys make fake payments, `rzp_live_` keys take real money.
+Delete any old `CASHFREE_*` variables.
+After changing variables: Deploys -> Trigger deploy.
 
-## Step 7 — Test
-Open your site, fill the form, pay with Cashfree's sandbox test UPI/card details (listed in Cashfree's docs under "test data"). You should land on the download page and get the PDF.
+## Test, then go live
+1. Razorpay dashboard -> turn on **Test Mode** -> Account & Settings -> **API Keys** -> Generate Test Key.
+2. Put the test key ID and secret into Netlify, redeploy, and buy a level using Razorpay's test card or UPI details (in their docs).
+   You should land on the download page and get the PDF.
+3. Switch Razorpay to **Live Mode**, generate live keys, replace the two Netlify values, and redeploy.
+4. Buy Level 1 (₹99) yourself once to confirm real money arrives and the download works.
 
-## Step 8 — Go live
-1. Complete KYC in Cashfree (PAN, bank account, etc.). Give them your Netlify URL; they review the site and policy pages.
-2. In Cashfree production dashboard, **whitelist your domain** (`your-name.netlify.app`). Checkout won't open on domains that aren't whitelisted.
-3. Copy the **production** App ID and Secret Key into Netlify, set `CASHFREE_ENV` to `production`, and redeploy.
-4. Do one real ₹1–₹199 test purchase yourself.
+## PDFs on Google Drive
+Upload each PDF, Share -> **Anyone with the link** -> Viewer, copy the link. For a direct download use
+`https://drive.google.com/uc?export=download&id=FILE_ID`. Keep these links private.
+Only keep bullets on the site that match what is really inside each PDF.
 
 ## Good to know
-- Never put the Secret Key in any file in `public/`. It lives only in Netlify's environment variables.
-- If a buyer closes the tab before returning to your site, they still paid: you'll see the order in the Cashfree dashboard, and they can contact you with the order ID. Email them the file.
-- A buyer can still forward the PDF itself. That's true for every PDF seller; adding their name inside the PDF discourages it.
-- Netlify's free plan is enough for thousands of visits a month. Check your usage under Netlify → Usage.
+- Never put a secret key in any file. This repo is public.
+- If a buyer closes the tab before the download page, they still paid. Find the order in Razorpay -> Transactions and email them the file.
+- Add webhooks later if you want extra safety for edge cases.
