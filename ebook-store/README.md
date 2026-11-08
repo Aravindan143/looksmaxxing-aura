@@ -23,16 +23,21 @@ netlify/functions/*.mjs         Server code (create order, verify, download)
 netlify/lib/cashfree.mjs        Shared Cashfree helpers
 ```
 
-## Step 1 — Put your PDF on Google Drive
-1. Upload the PDF to Google Drive.
-2. Share → General access → **Anyone with the link** → Viewer.
-3. Copy the link. Optional, for a direct download instead of a preview, change
-   `https://drive.google.com/file/d/FILE_ID/view?usp=sharing`
-   to `https://drive.google.com/uc?export=download&id=FILE_ID`.
-Keep this link private. It is only shown to people who paid.
+## Step 1 — Make 3 PDFs and put them on Google Drive
+| Level | What the PDF contains |
+|---|---|
+| Level 1: Starter Pack | Skin, Hair and grooming, Posture and jawline, 30-day checklist |
+| Level 2: Complete plan | Everything in Level 1 + Physique, Style, Presence, day-by-day 90-day schedule |
+| Level 3: Ultimate pack | Everything in Level 2 + progress tracker, cheat sheets, photo check-in guide |
+
+For each PDF: upload to Google Drive → Share → General access → **Anyone with the link** → Viewer → copy the link.
+For a direct download instead of a preview, change `https://drive.google.com/file/d/FILE_ID/view?usp=sharing`
+to `https://drive.google.com/uc?export=download&id=FILE_ID`.
+Keep these links private. They are only shown to people who paid.
+Only keep bullets on the website that match what is really inside each PDF.
 
 ## Step 2 — Edit your content
-- `public/index.html`: title, headline, chapters, FAQ, price (₹199 appears in 3 places).
+- `public/index.html`: title, headline, what each level contains, FAQ. Prices come from the server (see `netlify/lib/cashfree.mjs`), so the page and the amount charged can't disagree .
 - All policy pages: replace `[YOUR NAME]`, `[YOUR EMAIL]`, `[YOUR PHONE]`, `[CITY]`, address, `[DATE]`.
 
 ## Step 3 — Put the code on GitHub (free)
@@ -57,10 +62,11 @@ Site configuration → Environment variables → Add:
 | `CASHFREE_APP_ID` | your App ID |
 | `CASHFREE_SECRET_KEY` | your Secret Key |
 | `CASHFREE_ENV` | `sandbox` (later `production`) |
-| `PRODUCT_PRICE` | `199` (must match the page) |
-| `PRODUCT_NAME` | `The AuraMax Guide` |
-| `DOWNLOAD_URL` | your Google Drive link |
+| `DOWNLOAD_URL_L1` | Google Drive link to the Level 1 PDF |
+| `DOWNLOAD_URL_L2` | Google Drive link to the Level 2 PDF |
+| `DOWNLOAD_URL_L3` | Google Drive link to the Level 3 PDF |
 | `DOWNLOAD_DAYS` | `30` (optional) |
+| `PRICE_L1`, `PRICE_L2`, `PRICE_L3` | optional price changes; defaults are 99, 249, 499 |
 
 Then **Deploys → Trigger deploy** so the new values take effect.
 

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Your download</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="site-head"><div class="wrap"><a class="brand" href="/">AURA<b>MAX</b></a></div></header>
+
+<main class="policy">
+  <h1 id="title">Checking your payment</h1>
+  <div class="status-card" id="card" aria-live="polite">
+    <p id="msg">This takes a few seconds.</p>
+  </div>
+</main>
+
+<script>
+  const params = new URLSearchParams(location.search);
+  const rawId = params.get("order_id") || "";
+  const orderId = /^ebk_(l1|l2|l3)_\d{10,15}_[a-f0-9]{8}$/.test(rawId) ? rawId : null;
+  const title = document.getElementById("title");
+  const card = document.getElementById("card");
+
+  function show(heading, html) {
+    title.textContent = heading;
+    card.innerHTML = html;
+  }
+
+  async function check(attempt = 1) {
+    if (!orderId) {
+      return show("No order found", '<p>This page needs an order ID. <a href="/#buy">Go back to the guide</a>.</p>');
+    }
+    try {
+      const res = await fetch("/api/verify-order?order_id=" + encodeURIComponent(orderId));
+      const data = await res.json();
+
+      if (data.paid) {
+        const link = "/api/download?order_id=" + encodeURIComponent(orderId);
+        const first = (data.name || "").split(" ")[0];
+        return show(
+          first ? "You're in, " + first : "You're in",
+          '<p>Your payment went through for <strong>' + (data.productName || 'your guide') + '</strong>. Download it below.</p>' +
+          '<p><a class="btn" href="' + link + '">Download the PDF</a></p>' +
+          '<p class="fine">Bookmark this page: the download link works for 30 days. ' +
+          'Your order ID is <span class="order-id">' + orderId + '</span>. Keep it in case you need help.</p>'
+        );
+      }
+
+      if (data.status === "ACTIVE" && attempt < 6) {
+        document.getElementById("msg") && (document.getElementById("msg").textContent = "Waiting for your bank to confirm…");
+        return setTimeout(() => check(attempt + 1), 3000);
+      }
+
+      if (data.status === "ACTIVE") {
+        return show("Payment not confirmed yet",
+          '<p>Your bank hasn\'t confirmed the payment. If money left your account, refresh this page in a few minutes.</p>' +
+          '<p>Still stuck? <a href="/contact.html">Contact us</a> with order ID <span class="order-id">' + orderId + '</span>.</p>');
+      }
+
+      return show("Payment didn't go through",
+        '<p>The payment failed or was cancelled. If money left your account, your bank usually returns it within a few working days.</p><p><a class="btn" href="/#buy">Try again</a></p>');
+    } catch (e) {
+      if (attempt < 3) return setTimeout(() => check(attempt + 1), 2000);
+      show("Couldn't check the payment", '<p>Refresh this page to try again. Your order ID is <span class="order-id">' + orderId + '</span>.</p>');
+    }
+  }
+
+  check();
+</script>
+</body>
+</html>
