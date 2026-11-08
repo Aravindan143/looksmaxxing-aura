@@ -1,0 +1,8 @@
+{
+  "name": "ebook-store",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Sell a PDF with Cashfree on Netlify's free plan",
+  "engines": { "node": ">=18" }
+}
