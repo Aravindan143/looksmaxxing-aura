@@ -2,6 +2,12 @@
   publish = "public"
   functions = "netlify/functions"
 
+# These settings are plain configuration, not secrets. Words like "production" and the
+# prices appear in the site's code on purpose, which would otherwise trip Netlify's scanner.
+# CASHFREE_SECRET_KEY and CASHFREE_APP_ID are deliberately NOT listed, so they stay protected.
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "CASHFREE_ENV,DOWNLOAD_DAYS,PRICE_L1,PRICE_L2,PRICE_L3"
+
 [functions]
   node_bundler = "esbuild"
 
