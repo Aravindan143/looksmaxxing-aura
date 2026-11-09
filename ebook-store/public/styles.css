@@ -345,3 +345,19 @@ input:focus { border-color: var(--purple); }
   .btn::after { display: none; }
   .level:hover, .level.featured:hover, .chapters li:hover { transform: none; }
 }
+
+/* ---------- Content images: readable but not overwhelming on mobile ---------- */
+.content-img {
+  width: 100%;
+  border-radius: 16px;
+}
+@media (max-width: 860px) {
+  .content-img {
+    max-height: 50vh;
+    width: auto;
+    max-width: 100%;
+    margin-inline: auto;
+    display: block;
+    border-radius: 12px;
+  }
+}
