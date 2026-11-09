@@ -353,7 +353,7 @@ input:focus { border-color: var(--purple); }
 }
 @media (max-width: 860px) {
   .content-img {
-    max-height: 50vh;
+    max-height: 38vh;
     width: auto;
     max-width: 100%;
     margin-inline: auto;
