@@ -345,3 +345,17 @@ input:focus { border-color: var(--purple); }
   .btn::after { display: none; }
   .level:hover, .level.featured:hover, .chapters li:hover { transform: none; }
 }
+
+/* ---------- Mobile-friendly image rows ---------- */
+.img-desktop { display: block; }
+.img-mobile-stack { display: none; }
+
+@media (max-width: 860px) {
+  .img-desktop { display: none; }
+  .img-mobile-stack { display: flex; flex-direction: column; gap: 0.6rem; }
+  .img-mobile-stack img {
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+  }
+}
